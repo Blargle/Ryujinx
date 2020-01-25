@@ -1,4 +1,6 @@
+using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.Utilities;
 using System;
 using System.Buffers.Binary;
@@ -48,7 +50,7 @@ namespace Ryujinx.HLE.HOS.Services.Prepo
 
         private ResultCode ProcessReport(ServiceCtx context, bool withUserID)
         {
-            UInt128 userId   = withUserID ? new UInt128(context.RequestData.ReadBytes(0x10)) : new UInt128();
+            UserId  userId   = withUserID ? context.RequestData.ReadStruct<UserId>() : new UserId();
             string  gameRoom = StringUtils.ReadUtf8String(context);
 
             if (withUserID)
@@ -79,7 +81,7 @@ namespace Ryujinx.HLE.HOS.Services.Prepo
             return ResultCode.Success;
         }
 
-        public string ReadReportBuffer(byte[] buffer, string room, UInt128 userId)
+        public string ReadReportBuffer(byte[] buffer, string room, UserId userId)
         {
             StringBuilder sb = new StringBuilder();
 
