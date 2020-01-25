@@ -86,5 +86,15 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
 
             return ResultCode.Success;
         }
+
+        [Command(21)]
+        // GetAppletInfo
+        public ResultCode GetAppletInfo(ServiceCtx context)
+        {
+            Logger.PrintStub(LogClass.ServiceNifm);
+
+            return ResultCode.Success;
+        }
+
     }
 }
