@@ -240,7 +240,9 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             {
                 attribute.TitleId = new TitleId(context.Process.TitleId);
             }
-
+            if (attribute.Type == SaveDataType.Cache) {
+                attribute.Type = SaveDataType.Bcat;
+            }
             Result result = _baseFileSystemProxy.OpenSaveDataFileSystem(out LibHac.Fs.IFileSystem fileSystem, spaceId, ref attribute);
 
             if (result.IsSuccess())
