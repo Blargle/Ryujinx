@@ -30,6 +30,7 @@ namespace Ryujinx.Graphics.Shader.CodeGen.Glsl
         {
             { AttributeConsts.Layer,               new BuiltInAttribute("gl_Layer",           VariableType.S32)  },
             { AttributeConsts.PointSize,           new BuiltInAttribute("gl_PointSize",       VariableType.F32)  },
+            //{ AttributeConsts.ViewportIdx,         new BuiltInAttribute("gl_ViewportIndex",   VariableType.Int)  },
             { AttributeConsts.PositionX,           new BuiltInAttribute("gl_Position.x",      VariableType.F32)  },
             { AttributeConsts.PositionY,           new BuiltInAttribute("gl_Position.y",      VariableType.F32)  },
             { AttributeConsts.PositionZ,           new BuiltInAttribute("gl_Position.z",      VariableType.F32)  },
