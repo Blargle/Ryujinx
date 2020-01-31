@@ -1,5 +1,5 @@
+using ARMeilleure.Translation.PTC;
 using Gtk;
-using JsonPrettyPrinterPlus;
 using Ryujinx.Audio;
 using Ryujinx.Common.Logging;
 using Ryujinx.Configuration;
@@ -12,11 +12,8 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Utf8Json;
-using Utf8Json.Resolvers;
 
 using GUI = Gtk.Builder.ObjectAttribute;
 
@@ -343,6 +340,8 @@ namespace Ryujinx.Ui
                 _firmwareInstallFile.Sensitive      = true;
                 _firmwareInstallDirectory.Sensitive = true;
             });
+
+            Ptc.Stop();
         }
 
         private static void UpdateGameMetadata(string titleId)
@@ -379,6 +378,9 @@ namespace Ryujinx.Ui
             device?.Dispose();
             DiscordIntegrationModule.Exit();
             Logger.Shutdown();
+
+            Ptc.Dispose();
+
             Application.Quit();
         }
 

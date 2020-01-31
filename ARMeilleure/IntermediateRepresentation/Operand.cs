@@ -11,6 +11,10 @@ namespace ARMeilleure.IntermediateRepresentation
 
         public ulong Value { get; private set; }
 
+        public bool DisableCF { get; }
+
+        public int? Index { get; }
+
         public LinkedList<Node> Assignments { get; }
         public LinkedList<Node> Uses        { get; }
 
@@ -36,9 +40,13 @@ namespace ARMeilleure.IntermediateRepresentation
             Value = (uint)value;
         }
 
-        public Operand(long value) : this(OperandKind.Constant, OperandType.I64)
+        public Operand(long value, bool disableCF = false, int? index = null) : this(OperandKind.Constant, OperandType.I64)
         {
             Value = (ulong)value;
+
+            DisableCF = disableCF;
+
+            Index = index;
         }
 
         public Operand(ulong value) : this(OperandKind.Constant, OperandType.I64)
