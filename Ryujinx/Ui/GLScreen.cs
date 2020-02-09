@@ -6,6 +6,7 @@ using Ryujinx.Graphics.OpenGL;
 using Ryujinx.HLE;
 using Ryujinx.HLE.Input;
 using System;
+using System.IO;
 using System.Threading;
 
 using Stopwatch = System.Diagnostics.Stopwatch;
@@ -66,6 +67,12 @@ namespace Ryujinx.Ui
             MakeCurrent();
 
             _renderer.Initialize();
+
+            string basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ryujinx");
+            string workPath = Path.Combine(basePath, "games", _device.System.TitleIdText, "cache", "gpu");
+
+            _device.Gpu.SetShaderCachePath(workPath);
+            _device.Gpu.LoadShaderCache();
 
             Stopwatch chrono = new Stopwatch();
 
