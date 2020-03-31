@@ -1,8 +1,8 @@
 using Gtk;
-using JsonPrettyPrinterPlus;
 using LibHac.Common;
 using LibHac.Ns;
 using Ryujinx.Audio;
+using Ryujinx.Common.Configuration.Hid;
 using Ryujinx.Common.Logging;
 using Ryujinx.Configuration;
 using Ryujinx.Debugger.Profiler;
@@ -11,15 +11,11 @@ using Ryujinx.Graphics.OpenGL;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.FileSystem.Content;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Utf8Json;
-using Utf8Json.Resolvers;
 
 using GUI = Gtk.Builder.ObjectAttribute;
 
@@ -32,7 +28,7 @@ namespace Ryujinx.Ui
 
         private static HLE.Switch _emulationContext;
 
-        private static GLRenderer _gLWidget;
+        private static GlRenderer _glWidget;
 
         private static AutoResetEvent _deviceExitStatus = new AutoResetEvent(false);
 
@@ -43,37 +39,34 @@ namespace Ryujinx.Ui
         private static bool _ending;
         private static bool _debuggerOpened;
 
-        private static TreeView _treeView;
-
         private static Ryujinx.Debugger.Debugger _debugger;
 
 #pragma warning disable CS0649
 #pragma warning disable IDE0044
 
-        [GUI] Window         _mainWin;
         [GUI] MenuBar        _menuBar;
         [GUI] Box            _footerBox;
-        [GUI] MenuItem       _fullScreen;
         [GUI] Box            _statusBar;
         [GUI] MenuItem       _stopEmulation;
+        [GUI] MenuItem       _fullScreen;
         [GUI] CheckMenuItem  _favToggle;
-        [GUI] MenuItem       _firmwareInstallFile;
         [GUI] MenuItem       _firmwareInstallDirectory;
+        [GUI] MenuItem       _firmwareInstallFile;
         [GUI] Label          _hostStatus;
         [GUI] MenuItem       _openDebugger;
         [GUI] CheckMenuItem  _iconToggle;
-        [GUI] CheckMenuItem  _appToggle;
         [GUI] CheckMenuItem  _developerToggle;
-        [GUI] CheckMenuItem  _versionToggle;
+        [GUI] CheckMenuItem  _appToggle;
         [GUI] CheckMenuItem  _timePlayedToggle;
+        [GUI] CheckMenuItem  _versionToggle;
         [GUI] CheckMenuItem  _lastPlayedToggle;
         [GUI] CheckMenuItem  _fileExtToggle;
-        [GUI] CheckMenuItem  _fileSizeToggle;
         [GUI] CheckMenuItem  _pathToggle;
+        [GUI] CheckMenuItem  _fileSizeToggle;
         [GUI] Label          _gameStatus;
         [GUI] TreeView       _gameTable;
-        [GUI] ScrolledWindow _gameTableWindow;
         [GUI] TreeSelection  _gameTableSelection;
+        [GUI] ScrolledWindow _gameTableWindow;
         [GUI] Label          _gpuName;
         [GUI] Label          _progressLabel;
         [GUI] Label          _firmwareVersionLabel;
@@ -100,9 +93,12 @@ namespace Ryujinx.Ui
             this.DeleteEvent      += Window_Close;
             _fullScreen.Activated += FullScreen_Toggled;
 
+            this.Icon  = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.Icon.png");
+            this.Title = $"Ryujinx {Program.Version}";
+
             ApplicationLibrary.ApplicationAdded        += Application_Added;
             ApplicationLibrary.ApplicationCountUpdated += ApplicationCount_Updated;
-            GLRenderer.StatusUpdatedEvent              += Update_StatusBar;
+            GlRenderer.StatusUpdatedEvent              += Update_StatusBar;
 
             _gameTable.ButtonReleaseEvent += Row_Clicked;
 
@@ -129,12 +125,8 @@ namespace Ryujinx.Ui
             // Make sure that everything is loaded.
             _virtualFileSystem.Reload();
 
-            _treeView = _gameTable;
-
             ApplyTheme();
 
-            _mainWin.Icon            = new Gdk.Pixbuf(Assembly.GetExecutingAssembly(), "Ryujinx.Ui.assets.Icon.png");
-            _mainWin.Title           = $"Ryujinx {Program.Version}";
             _stopEmulation.Sensitive = false;
 
             if (ConfigurationState.Instance.Ui.GuiColumns.FavColumn)        _favToggle.Active        = true;
@@ -305,7 +297,7 @@ namespace Ryujinx.Ui
         {
             if (_gameLoaded)
             {
-                GtkDialog.CreateDialog("Ryujinx", "A game has already been loaded", "Please close it first and try again.");
+                GtkDialog.CreateInfoDialog("Ryujinx", "A game has already been loaded", "Please close it first and try again.");
             }
             else
             {
@@ -418,7 +410,7 @@ namespace Ryujinx.Ui
 #if MACOS_BUILD
                 CreateGameWindow(device);
 #else
-                var windowThread = new Thread(() =>
+                Thread windowThread = new Thread(() =>
                 {
                     CreateGameWindow(device);
                 })
@@ -446,23 +438,26 @@ namespace Ryujinx.Ui
 
         private void CreateGameWindow(HLE.Switch device)
         {
-            device.Hid.InitializePrimaryController(ConfigurationState.Instance.Hid.ControllerType);
+            foreach (InputConfig inputConfig in ConfigurationState.Instance.Hid.InputConfig.Value)
+            {
+                device.Hid.InitializeController(inputConfig.ControllerId, inputConfig.ControllerType);
+            }
 
-            _gLWidget = new GLRenderer(_emulationContext);
+            _glWidget = new GlRenderer(_emulationContext);
 
             Application.Invoke(delegate
             {
                 _viewBox.Remove(_gameTableWindow);
-                _gLWidget.Expand = true;
-                _viewBox.Child = _gLWidget;
+                _glWidget.Expand = true;
+                _viewBox.Child = _glWidget;
 
-                _gLWidget.ShowAll();
+                _glWidget.ShowAll();
                 EditFooterForGameRender();
             });
 
-            _gLWidget.WaitEvent.WaitOne();
+            _glWidget.WaitEvent.WaitOne();
 
-            _gLWidget.Start();
+            _glWidget.Start();
 
             device.Dispose();
             _deviceExitStatus.Set();
@@ -470,15 +465,15 @@ namespace Ryujinx.Ui
             // NOTE: Everything that is here will not be executed when you close the UI.
             Application.Invoke(delegate
             {
-                _viewBox.Remove(_gLWidget);
-                _gLWidget.Exit();
+                _viewBox.Remove(_glWidget);
+                _glWidget.Exit();
 
-                if(_gLWidget.Window != this.Window && _gLWidget.Window != null)
+                if(_glWidget.Window != this.Window && _glWidget.Window != null)
                 {
-                    _gLWidget.Window.Dispose();
+                    _glWidget.Window.Dispose();
                 }
 
-                _gLWidget.Dispose();
+                _glWidget.Dispose();
 
                 _viewBox.Add(_gameTableWindow);
 
@@ -488,7 +483,7 @@ namespace Ryujinx.Ui
 
                 _emulationContext = null;
                 _gameLoaded       = false;
-                _gLWidget         = null;
+                _glWidget         = null;
 
                 DiscordIntegrationModule.SwitchToMainMenu();
 
@@ -519,7 +514,7 @@ namespace Ryujinx.Ui
 
         public void ToggleExtraWidgets(bool show)
         {
-            if (_gLWidget != null)
+            if (_glWidget != null)
             {
                 if (show)
                 {
@@ -553,6 +548,11 @@ namespace Ryujinx.Ui
             }
         }
 
+        public static void SaveConfig()
+        {
+            ConfigurationState.Instance.ToFileFormat().SaveConfig(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config.json"));
+        }
+
         private void End(HLE.Switch device)
         {
 
@@ -571,10 +571,10 @@ namespace Ryujinx.Ui
             {
                 UpdateGameMetadata(device.System.TitleIdText);
 
-                if (_gLWidget != null)
+                if (_glWidget != null)
                 {
                     // We tell the widget that we are exiting
-                    _gLWidget.Exit();
+                    _glWidget.Exit();
 
                     // Wait for the other thread to dispose the HLE context before exiting.
                     _deviceExitStatus.WaitOne();
@@ -764,7 +764,7 @@ namespace Ryujinx.Ui
 
         private void StopEmulation_Pressed(object sender, EventArgs args)
         {
-            _gLWidget?.Exit();
+            _glWidget?.Exit();
         }
 
         private void Installer_File_Pressed(object o, EventArgs args)
@@ -799,7 +799,7 @@ namespace Ryujinx.Ui
 
         private void RefreshFirmwareLabel()
         {
-            var currentFirmware = _contentManager.GetCurrentFirmwareVersion();
+            SystemVersion currentFirmware = _contentManager.GetCurrentFirmwareVersion();
 
             GLib.Idle.Add(new GLib.IdleHandler(() =>
             {
@@ -821,7 +821,7 @@ namespace Ryujinx.Ui
 
                     fileChooser.Dispose();
 
-                    var firmwareVersion = _contentManager.VerifyFirmwarePackage(filename);
+                    SystemVersion firmwareVersion = _contentManager.VerifyFirmwarePackage(filename);
 
                     if (firmwareVersion == null)
                     {
@@ -840,7 +840,7 @@ namespace Ryujinx.Ui
                         return;
                     }
 
-                    var currentVersion = _contentManager.GetCurrentFirmwareVersion();
+                    SystemVersion currentVersion = _contentManager.GetCurrentFirmwareVersion();
 
                     string dialogMessage = $"System version {firmwareVersion.VersionString} will be installed.";
 
@@ -980,7 +980,7 @@ namespace Ryujinx.Ui
 
         private void Settings_Pressed(object sender, EventArgs args)
         {
-            SwitchSettings settingsWin = new SwitchSettings(_virtualFileSystem, _contentManager);
+            SettingsWindow settingsWin = new SettingsWindow(_virtualFileSystem, _contentManager);
             settingsWin.Show();
         }
 
@@ -1195,11 +1195,6 @@ namespace Ryujinx.Ui
             {
                 return 0;
             }
-        }
-
-        public static void SaveConfig()
-        {
-            ConfigurationState.Instance.ToFileFormat().SaveConfig(Program.ConfigurationPath);
         }
     }
 }
