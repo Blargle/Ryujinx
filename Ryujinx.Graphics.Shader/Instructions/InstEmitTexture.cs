@@ -212,7 +212,7 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 type |= SamplerType.Array;
             }
 
-            TextureFormat format = TextureFormat.Unknown;
+            //TextureFormat format = TextureFormat.Unknown;
 
             if (op.UseComponents)
             {
@@ -226,28 +226,29 @@ namespace Ryujinx.Graphics.Shader.Instructions
                     }
                 }
 
-                if (!op.IsBindless)
-                {
-                    format = GetTextureFormat(context, op.Immediate);
-                }
+                //if (!op.IsBindless)
+                //{
+                //    format = GetTextureFormat(context, op.Immediate);
+                //}
             }
             else
             {
-                if (op.ByteAddress)
-                {
-                    int xIndex = op.IsBindless ? 1 : 0;
+                System.Console.WriteLine("Unsized image store not supported.");
+                //if (op.ByteAddress)
+                //{
+                //    int xIndex = op.IsBindless ? 1 : 0;
 
-                    sourcesList[xIndex] = context.ShiftRightS32(sourcesList[xIndex], Const(GetComponentSizeInBytesLog2(op.Size)));
-                }
+                //    sourcesList[xIndex] = context.ShiftRightS32(sourcesList[xIndex], Const(GetComponentSizeInBytesLog2(op.Size)));
+                //}
 
-                int components = GetComponents(op.Size);
+                //int components = GetComponents(op.Size);
 
-                for (int compIndex = 0; compIndex < components; compIndex++)
-                {
-                    sourcesList.Add(Rb());
-                }
+                //for (int compIndex = 0; compIndex < components; compIndex++)
+                //{
+                //    sourcesList.Add(Rb());
+                //}
 
-                format = GetTextureFormat(op.Size);
+                //format = GetTextureFormat(op.Size);
             }
 
             Operand[] sources = sourcesList.ToArray();
@@ -263,10 +264,10 @@ namespace Ryujinx.Graphics.Shader.Instructions
                 handle,
                 0,
                 null,
-                sources)
-            {
-                Format = format
-            };
+                sources);
+            //{
+            //    Format = format
+            //};
 
             context.Add(operation);
         }
