@@ -704,6 +704,17 @@ namespace Ryujinx.Graphics.OpenGL
         {
             GL.PointSize(size);
         }
+        public void SetVertexProgramPointSize(bool enabled)
+        {
+            if (enabled)
+            {
+                GL.Enable(EnableCap.ProgramPointSize);
+            }
+            else
+            {
+                GL.Disable(EnableCap.ProgramPointSize);
+            }
+        }
 
         public void SetPrimitiveRestart(bool enable, int index)
         {

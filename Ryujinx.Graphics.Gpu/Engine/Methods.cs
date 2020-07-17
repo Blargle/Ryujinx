@@ -229,6 +229,11 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 UpdatePointSizeState(state);
             }
 
+            if (state.QueryModified(MethodOffset.VertexProgramPointSize))
+            {
+                UpdateVertexProgramPointSize(state);
+            }
+
             if (state.QueryModified(MethodOffset.PrimitiveRestartState))
             {
                 UpdatePrimitiveRestartState(state);
@@ -708,6 +713,17 @@ namespace Ryujinx.Graphics.Gpu.Engine
             float size = state.Get<float>(MethodOffset.PointSize);
 
             _context.Renderer.Pipeline.SetPointSize(size);
+        }
+
+        /// <summary>
+        /// Updates if vertex program point size is enabled based on guest GPU state.
+        /// </summary>
+        /// <param name="state">Current GPU state</param>
+        private void UpdateVertexProgramPointSize(GpuState state)
+        {
+            bool vertexpointsize = state.Get<bool>(MethodOffset.VertexProgramPointSize);
+
+            _context.Renderer.Pipeline.SetVertexProgramPointSize(vertexpointsize);
         }
 
         /// <summary>

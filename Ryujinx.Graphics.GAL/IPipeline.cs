@@ -52,6 +52,8 @@ namespace Ryujinx.Graphics.GAL
 
         void SetPointSize(float size);
 
+        void SetVertexProgramPointSize(bool enabled);
+
         void SetPrimitiveRestart(bool enable, int index);
 
         void SetPrimitiveTopology(PrimitiveTopology topology);

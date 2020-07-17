@@ -92,6 +92,7 @@ namespace Ryujinx.Graphics.Gpu.State
         IndexBufferCount                = 0x5f8,
         DepthBiasClamp                  = 0x61f,
         VertexBufferInstanced           = 0x620,
+        VertexProgramPointSize          = 0x644,
         FaceState                       = 0x646,
         ViewportTransformEnable         = 0x64b,
         ViewVolumeClipControl           = 0x64f,
