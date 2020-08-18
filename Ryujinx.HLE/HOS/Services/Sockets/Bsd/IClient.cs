@@ -164,7 +164,8 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
         private ResultCode SocketInternal(ServiceCtx context, bool exempt)
         {
             AddressFamily domain   = (AddressFamily)context.RequestData.ReadInt32();
-            SocketType    type     = (SocketType)context.RequestData.ReadInt32();
+            int typeint = context.RequestData.ReadInt32();
+            SocketType type = (SocketType)(typeint & ~0x20000000);
             ProtocolType  protocol = (ProtocolType)context.RequestData.ReadInt32();
 
             if (domain == AddressFamily.Unknown)
