@@ -117,7 +117,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
 
             int clientId = context.Memory.Read<int>((ulong)position);
 
-            context.ResponseData.Write(GeneralServiceManager.Get(clientId).IsAnyInternetRequestAccepted);
+            context.ResponseData.Write(false);
 
             return ResultCode.Success;
         }
