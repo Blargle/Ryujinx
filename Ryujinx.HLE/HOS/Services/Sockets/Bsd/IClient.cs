@@ -1013,6 +1013,11 @@ namespace Ryujinx.HLE.HOS.Services.Sockets.Bsd
             int level      = context.RequestData.ReadInt32();
             int optionName = context.RequestData.ReadInt32();
 
+            if (optionName == 16384)
+            {
+                optionName = 4098;
+            }
+
             (ulong bufferPos, ulong bufferSize) = context.Request.GetBufferType0x21();
 
             LinuxError errno  = LinuxError.EBADF;
