@@ -20,7 +20,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
         /// <summary>
         /// Flushes any queued ubo updates.
         /// </summary>
-        private void FlushUboUpdate()
+        private void FlushUboDirty()
         {
             if (_ubLastWritten != null)
             {
@@ -47,7 +47,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             if (_ubFollowUpAddress != address || !_ubLastWritten.FullyContains(currentCpuAddress, 4) || _ubIntCount + 1 >= MaxUboSize)
             {
-                FlushUboUpdate();
+                FlushUboDirty();
 
                 _ubIntCount = 0;
 
@@ -81,7 +81,7 @@ namespace Ryujinx.Graphics.Gpu.Engine
 
             if (_ubFollowUpAddress != address || !_ubLastWritten.FullyContains(currentCpuAddress, size) || _ubIntCount + data.Length >= MaxUboSize)
             {
-                FlushUboUpdate();
+                FlushUboDirty();
 
                 _ubIntCount = 0;
 
