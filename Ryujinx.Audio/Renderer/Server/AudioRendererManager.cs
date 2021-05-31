@@ -22,7 +22,6 @@ using Ryujinx.Common.Logging;
 using Ryujinx.Memory;
 using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 
 namespace Ryujinx.Audio.Renderer.Server
@@ -320,19 +319,6 @@ namespace Ryujinx.Audio.Renderer.Server
         {
             if (disposing)
             {
-                // Clone the sessions array to dispose them outside the lock.
-                AudioRenderSystem[] sessions;
-
-                lock (_sessionLock)
-                {
-                    sessions = _sessions.ToArray();
-                }
-
-                foreach (AudioRenderSystem renderer in sessions)
-                {
-                    renderer?.Dispose();
-                }
-
                 lock (_audioProcessorLock)
                 {
                     if (_isRunning)

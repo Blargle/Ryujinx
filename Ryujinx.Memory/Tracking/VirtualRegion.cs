@@ -11,11 +11,9 @@ namespace Ryujinx.Memory.Tracking
         public List<RegionHandle> Handles = new List<RegionHandle>();
 
         private readonly MemoryTracking _tracking;
-        private MemoryPermission _lastPermission;
 
-        public VirtualRegion(MemoryTracking tracking, ulong address, ulong size, MemoryPermission lastPermission = MemoryPermission.Invalid) : base(address, size)
+        public VirtualRegion(MemoryTracking tracking, ulong address, ulong size) : base(address, size)
         {
-            _lastPermission = lastPermission;
             _tracking = tracking;
         }
 
@@ -35,8 +33,6 @@ namespace Ryujinx.Memory.Tracking
         /// <param name="mapped">True if the region has been mapped, false if unmapped</param>
         public void SignalMappingChanged(bool mapped)
         {
-            _lastPermission = MemoryPermission.Invalid;
-
             foreach (RegionHandle handle in Handles)
             {
                 handle.SignalMappingChanged(mapped);
@@ -65,19 +61,9 @@ namespace Ryujinx.Memory.Tracking
         /// <summary>
         /// Updates the protection for this virtual region.
         /// </summary>
-        public bool UpdateProtection()
+        public void UpdateProtection()
         {
-            MemoryPermission permission = GetRequiredPermission();
-
-            if (_lastPermission != permission)
-            {
-                _tracking.ProtectVirtualRegion(this, permission);
-                _lastPermission = permission;
-
-                return true;
-            }
-
-            return false;
+            _tracking.ProtectVirtualRegion(this, GetRequiredPermission());
         }
 
         /// <summary>
@@ -99,7 +85,7 @@ namespace Ryujinx.Memory.Tracking
 
         public override INonOverlappingRange Split(ulong splitAddress)
         {
-            VirtualRegion newRegion = new VirtualRegion(_tracking, splitAddress, EndAddress - splitAddress, _lastPermission);
+            VirtualRegion newRegion = new VirtualRegion(_tracking, splitAddress, EndAddress - splitAddress);
             Size = splitAddress - Address;
 
             // The new region inherits all of our parents.

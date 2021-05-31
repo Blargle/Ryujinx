@@ -130,8 +130,6 @@ namespace Ryujinx.Graphics.Gpu.Engine
                 _prevTfEnable = false;
             }
 
-            FlushUboDirty();
-
             // Shaders must be the first one to be updated if modified, because
             // some of the other state depends on information from the currently
             // bound shaders.

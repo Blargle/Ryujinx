@@ -12,24 +12,19 @@ namespace Ryujinx.Graphics.Gpu.Memory
     /// Represents physical memory, accessible from the GPU.
     /// This is actually working CPU virtual addresses, of memory mapped on the application process.
     /// </summary>
-    class PhysicalMemory : IDisposable
+    class PhysicalMemory
     {
         public const int PageSize = 0x1000;
 
-        private IVirtualMemoryManagerTracked _cpuMemory;
+        private readonly Cpu.MemoryManager _cpuMemory;
 
         /// <summary>
         /// Creates a new instance of the physical memory.
         /// </summary>
         /// <param name="cpuMemory">CPU memory manager of the application process</param>
-        public PhysicalMemory(IVirtualMemoryManagerTracked cpuMemory)
+        public PhysicalMemory(Cpu.MemoryManager cpuMemory)
         {
             _cpuMemory = cpuMemory;
-
-            if (_cpuMemory is IRefCounted rc)
-            {
-                rc.IncrementReferenceCount();
-            }
         }
 
         /// <summary>
@@ -217,19 +212,6 @@ namespace Ryujinx.Graphics.Gpu.Memory
         public CpuSmartMultiRegionHandle BeginSmartGranularTracking(ulong address, ulong size, ulong granularity = 4096)
         {
             return _cpuMemory.BeginSmartGranularTracking(address, size, granularity);
-        }
-
-        /// <summary>
-        /// Release our reference to the CPU memory manager.
-        /// </summary>
-        public void Dispose()
-        {
-            if (_cpuMemory is IRefCounted rc)
-            {
-                rc.DecrementReferenceCount();
-
-                _cpuMemory = null;
-            }
         }
     }
 }

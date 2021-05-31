@@ -84,7 +84,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
         {
             ulong leftAddress = BaseAddress;
 
-            ulong leftPagesCount = (address - leftAddress) / KPageTableBase.PageSize;
+            ulong leftPagesCount = (address - leftAddress) / KMemoryManager.PageSize;
 
             BaseAddress = address;
 
@@ -107,7 +107,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Memory
 
         public KMemoryInfo GetInfo()
         {
-            ulong size = PagesCount * KPageTableBase.PageSize;
+            ulong size = PagesCount * KMemoryManager.PageSize;
 
             return new KMemoryInfo(
                 BaseAddress,

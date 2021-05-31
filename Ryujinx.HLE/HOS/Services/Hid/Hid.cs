@@ -11,7 +11,6 @@ using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Keyboard;
 using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.DebugPad;
 using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.TouchScreen;
 using Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory.Npad;
-using Ryujinx.HLE.HOS.Kernel.Memory;
 
 namespace Ryujinx.HLE.HOS.Services.Hid
 {
@@ -19,9 +18,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
     {
         private readonly Switch _device;
 
-        private readonly SharedMemoryStorage _storage;
+        private readonly ulong _hidMemoryAddress;
 
-        internal ref SharedMemory SharedMemory => ref _storage.GetRef<SharedMemory>(0);
+        internal ref SharedMemory SharedMemory => ref _device.Memory.GetRef<SharedMemory>(_hidMemoryAddress);
 
         internal const int SharedMemEntryCount = 17;
 
@@ -49,10 +48,10 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             CheckTypeSizeOrThrow<SharedMemory>(Horizon.HidSize);
         }
 
-        internal Hid(in Switch device, SharedMemoryStorage storage)
+        public Hid(in Switch device, ulong sharedHidMemoryAddress)
         {
-            _device  = device;
-            _storage = storage;
+            _device           = device;
+            _hidMemoryAddress = sharedHidMemoryAddress;
 
             SharedMemory = SharedMemory.Create();
         }

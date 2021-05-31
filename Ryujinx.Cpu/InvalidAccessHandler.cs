@@ -1,4 +1,4 @@
-﻿namespace Ryujinx.Memory
+﻿namespace Ryujinx.Cpu
 {
     /// <summary>
     /// Function that handles a invalid memory access from the emulated CPU.

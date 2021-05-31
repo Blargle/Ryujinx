@@ -29,9 +29,9 @@ namespace Ryujinx.HLE.HOS
                 endOffset = kip.BssOffset + kip.BssSize;
             }
 
-            uint codeSize = BitUtils.AlignUp(kip.TextOffset + endOffset, KPageTableBase.PageSize);
+            uint codeSize = BitUtils.AlignUp(kip.TextOffset + endOffset, KMemoryManager.PageSize);
 
-            int codePagesCount = (int)(codeSize / KPageTableBase.PageSize);
+            int codePagesCount = (int)(codeSize / KMemoryManager.PageSize);
 
             ulong codeBaseAddress = kip.Is64BitAddressSpace ? 0x8000000UL : 0x200000UL;
 
@@ -70,7 +70,7 @@ namespace Ryujinx.HLE.HOS
                 ? MemoryRegion.Service
                 : MemoryRegion.Application;
 
-            KMemoryRegionManager region = context.MemoryManager.MemoryRegions[(int)memoryRegion];
+            KMemoryRegionManager region = context.MemoryRegions[(int)memoryRegion];
 
             KernelResult result = region.AllocatePages((ulong)codePagesCount, false, out KPageList pageList);
 
@@ -161,7 +161,7 @@ namespace Ryujinx.HLE.HOS
                     nsoSize = dataEnd;
                 }
 
-                nsoSize = BitUtils.AlignUp(nsoSize, KPageTableBase.PageSize);
+                nsoSize = BitUtils.AlignUp(nsoSize, KMemoryManager.PageSize);
 
                 nsoBase[index] = codeStart + (ulong)codeSize;
 
@@ -171,7 +171,7 @@ namespace Ryujinx.HLE.HOS
                 {
                     argsStart = (ulong)codeSize;
 
-                    argsSize = (uint)BitUtils.AlignDown(arguments.Length * 2 + ArgsTotalSize - 1, KPageTableBase.PageSize);
+                    argsSize = (uint)BitUtils.AlignDown(arguments.Length * 2 + ArgsTotalSize - 1, KMemoryManager.PageSize);
 
                     codeSize += argsSize;
                 }
@@ -180,9 +180,9 @@ namespace Ryujinx.HLE.HOS
             PtcProfiler.StaticCodeStart = codeStart;
             PtcProfiler.StaticCodeSize  = (ulong)codeSize;
 
-            int codePagesCount = (int)(codeSize / KPageTableBase.PageSize);
+            int codePagesCount = (int)(codeSize / KMemoryManager.PageSize);
 
-            int personalMmHeapPagesCount = metaData.PersonalMmHeapSize / KPageTableBase.PageSize;
+            int personalMmHeapPagesCount = metaData.PersonalMmHeapSize / KMemoryManager.PageSize;
 
             ProcessCreationInfo creationInfo = new ProcessCreationInfo(
                 metaData.TitleName,
@@ -198,7 +198,7 @@ namespace Ryujinx.HLE.HOS
 
             KResourceLimit resourceLimit = new KResourceLimit(context);
 
-            long applicationRgSize = (long)context.MemoryManager.MemoryRegions[(int)MemoryRegion.Application].Size;
+            long applicationRgSize = (long)context.MemoryRegions[(int)MemoryRegion.Application].Size;
 
             result  = resourceLimit.SetLimitValue(LimitableResource.Memory,         applicationRgSize);
             result |= resourceLimit.SetLimitValue(LimitableResource.Thread,         608);
@@ -312,7 +312,7 @@ namespace Ryujinx.HLE.HOS
                     return KernelResult.Success;
                 }
 
-                size = BitUtils.AlignUp(size, KPageTableBase.PageSize);
+                size = BitUtils.AlignUp(size, KMemoryManager.PageSize);
 
                 return process.MemoryManager.SetProcessMemoryPermission(address, size, permission);
             }

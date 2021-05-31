@@ -1,4 +1,5 @@
-﻿using Ryujinx.Cpu.Tracking;
+﻿using Ryujinx.Common;
+using Ryujinx.Cpu.Tracking;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Texture;
 using Ryujinx.Memory.Range;

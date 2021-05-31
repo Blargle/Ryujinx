@@ -1,12 +1,12 @@
 namespace Ryujinx.HLE.HOS.Kernel.Memory
 {
-    class KMemoryBlockSlabManager
+    class KMemoryBlockAllocator
     {
         private ulong _capacityElements;
 
         public int Count { get; set; }
 
-        public KMemoryBlockSlabManager(ulong capacityElements)
+        public KMemoryBlockAllocator(ulong capacityElements)
         {
             _capacityElements = capacityElements;
         }

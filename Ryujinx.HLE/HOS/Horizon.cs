@@ -102,7 +102,7 @@ namespace Ryujinx.HLE.HOS
 
         public int GlobalAccessLogMode { get; set; }
 
-        internal SharedMemoryStorage HidStorage { get; private set; }
+        internal ulong HidBaseAddress { get; private set; }
 
         internal NvHostSyncpt HostSyncpoint { get; private set; }
 
@@ -127,43 +127,38 @@ namespace Ryujinx.HLE.HOS
 
             // Note: This is not really correct, but with HLE of services, the only memory
             // region used that is used is Application, so we can use the other ones for anything.
-            KMemoryRegionManager region = KernelContext.MemoryManager.MemoryRegions[(int)MemoryRegion.NvServices];
+            KMemoryRegionManager region = KernelContext.MemoryRegions[(int)MemoryRegion.NvServices];
 
             ulong hidPa  = region.Address;
             ulong fontPa = region.Address + HidSize;
             ulong iirsPa = region.Address + HidSize + FontSize;
             ulong timePa = region.Address + HidSize + FontSize + IirsSize;
 
+            HidBaseAddress = hidPa - DramMemoryMap.DramBase;
+
             KPageList hidPageList  = new KPageList();
             KPageList fontPageList = new KPageList();
             KPageList iirsPageList = new KPageList();
             KPageList timePageList = new KPageList();
 
-            hidPageList.AddRange(hidPa,  HidSize  / KPageTableBase.PageSize);
-            fontPageList.AddRange(fontPa, FontSize / KPageTableBase.PageSize);
-            iirsPageList.AddRange(iirsPa, IirsSize / KPageTableBase.PageSize);
-            timePageList.AddRange(timePa, TimeSize / KPageTableBase.PageSize);
+            hidPageList .AddRange(hidPa,  HidSize  / KMemoryManager.PageSize);
+            fontPageList.AddRange(fontPa, FontSize / KMemoryManager.PageSize);
+            iirsPageList.AddRange(iirsPa, IirsSize / KMemoryManager.PageSize);
+            timePageList.AddRange(timePa, TimeSize / KMemoryManager.PageSize);
 
-            var hidStorage = new SharedMemoryStorage(KernelContext, hidPageList);
-            var fontStorage = new SharedMemoryStorage(KernelContext, fontPageList);
-            var iirsStorage = new SharedMemoryStorage(KernelContext, iirsPageList);
-            var timeStorage = new SharedMemoryStorage(KernelContext, timePageList);
+            HidSharedMem  = new KSharedMemory(KernelContext, hidPageList,  0, 0, KMemoryPermission.Read);
+            FontSharedMem = new KSharedMemory(KernelContext, fontPageList, 0, 0, KMemoryPermission.Read);
+            IirsSharedMem = new KSharedMemory(KernelContext, iirsPageList, 0, 0, KMemoryPermission.Read);
 
-            HidStorage = hidStorage;
+            KSharedMemory timeSharedMemory = new KSharedMemory(KernelContext, timePageList, 0, 0, KMemoryPermission.Read);
 
-            HidSharedMem  = new KSharedMemory(KernelContext, hidStorage,  0, 0, KMemoryPermission.Read);
-            FontSharedMem = new KSharedMemory(KernelContext, fontStorage, 0, 0, KMemoryPermission.Read);
-            IirsSharedMem = new KSharedMemory(KernelContext, iirsStorage, 0, 0, KMemoryPermission.Read);
-
-            KSharedMemory timeSharedMemory = new KSharedMemory(KernelContext, timeStorage, 0, 0, KMemoryPermission.Read);
-
-            TimeServiceManager.Instance.Initialize(device, this, timeSharedMemory, timeStorage, TimeSize);
+            TimeServiceManager.Instance.Initialize(device, this, timeSharedMemory, timePa - DramMemoryMap.DramBase, TimeSize);
 
             AppletState = new AppletStateMgr(this);
 
             AppletState.SetFocus(true);
 
-            Font = new SharedFontManager(device, fontStorage);
+            Font = new SharedFontManager(device, fontPa - DramMemoryMap.DramBase);
 
             VsyncEvent = new KEvent(KernelContext);
 
@@ -402,7 +397,6 @@ namespace Ryujinx.HLE.HOS
                         foreach (KProcess process in KernelContext.Processes.Values.Where(x => x.Flags.HasFlag(ProcessCreationFlags.IsApplication)))
                         {
                             process.Terminate();
-                            process.DecrementReferenceCount();
                         }
 
                         // The application existed, now surface flinger can exit too.
@@ -413,10 +407,7 @@ namespace Ryujinx.HLE.HOS
                         foreach (KProcess process in KernelContext.Processes.Values.Where(x => !x.Flags.HasFlag(ProcessCreationFlags.IsApplication)))
                         {
                             process.Terminate();
-                            process.DecrementReferenceCount();
                         }
-
-                        KernelContext.Processes.Clear();
                     }
 
                     // Exit ourself now!

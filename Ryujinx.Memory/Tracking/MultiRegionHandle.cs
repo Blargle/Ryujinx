@@ -34,20 +34,6 @@ namespace Ryujinx.Memory.Tracking
             Size = size;
         }
 
-        public void ForceDirty(ulong address, ulong size)
-        {
-            Dirty = true;
-
-            int startHandle = (int)((address - Address) / Granularity);
-            int lastHandle = (int)((address + (size - 1) - Address) / Granularity);
-
-            for (int i = startHandle; i <= lastHandle; i++)
-            {
-                _handles[i].SequenceNumber--;
-                _handles[i].ForceDirty();
-            }
-        }
-
         public void SignalWrite()
         {
             Dirty = true;
@@ -112,7 +98,7 @@ namespace Ryujinx.Memory.Tracking
             {
                 RegionHandle handle = _handles[i];
 
-                if (sequenceNumber != handle.SequenceNumber && handle.DirtyOrVolatile())
+                if (handle.Dirty && sequenceNumber != handle.SequenceNumber)
                 {
                     rgSize += handle.Size;
                     handle.Reprotect();

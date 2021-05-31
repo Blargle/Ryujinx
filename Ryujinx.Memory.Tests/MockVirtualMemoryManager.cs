@@ -1,6 +1,4 @@
-﻿using Ryujinx.Memory.Range;
-using System;
-using System.Collections.Generic;
+﻿using System;
 
 namespace Ryujinx.Memory.Tests
 {
@@ -14,7 +12,7 @@ namespace Ryujinx.Memory.Tests
         {
         }
 
-        public void Map(ulong va, nuint hostAddress, ulong size)
+        public void Map(ulong va, ulong pa, ulong size)
         {
             throw new NotImplementedException();
         }
@@ -59,9 +57,9 @@ namespace Ryujinx.Memory.Tests
             throw new NotImplementedException();
         }
 
-        IEnumerable<HostMemoryRange> IVirtualMemoryManager.GetPhysicalRegions(ulong va, ulong size)
+        public (ulong address, ulong size)[] GetPhysicalRegions(ulong va, ulong size)
         {
-            return NoMappings ? new HostMemoryRange[0] : new HostMemoryRange[] { new HostMemoryRange((nuint)va, size) };
+            return NoMappings ? new (ulong address, ulong size)[0] : new (ulong address, ulong size)[] { (va, size) };
         }
 
         public bool IsMapped(ulong va)

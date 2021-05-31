@@ -28,10 +28,10 @@ namespace Ryujinx.HLE.HOS.Kernel
 
         public KResourceLimit ResourceLimit { get; }
 
-        public KMemoryManager MemoryManager { get; }
+        public KMemoryRegionManager[] MemoryRegions { get; }
 
-        public KMemoryBlockSlabManager LargeMemoryBlockSlabManager { get; }
-        public KMemoryBlockSlabManager SmallMemoryBlockSlabManager { get; }
+        public KMemoryBlockAllocator LargeMemoryBlockAllocator { get; }
+        public KMemoryBlockAllocator SmallMemoryBlockAllocator { get; }
 
         public KSlabHeap UserSlabHeapPages { get; }
 
@@ -70,17 +70,15 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             KernelInit.InitializeResourceLimit(ResourceLimit, memorySize);
 
-            MemoryManager = new KMemoryManager(memorySize, memoryArrange);
+            MemoryRegions = KernelInit.GetMemoryRegions(memorySize, memoryArrange);
 
-            LargeMemoryBlockSlabManager = new KMemoryBlockSlabManager(KernelConstants.MemoryBlockAllocatorSize * 2);
-            SmallMemoryBlockSlabManager = new KMemoryBlockSlabManager(KernelConstants.MemoryBlockAllocatorSize);
+            LargeMemoryBlockAllocator = new KMemoryBlockAllocator(KernelConstants.MemoryBlockAllocatorSize * 2);
+            SmallMemoryBlockAllocator = new KMemoryBlockAllocator(KernelConstants.MemoryBlockAllocatorSize);
 
             UserSlabHeapPages = new KSlabHeap(
                 KernelConstants.UserSlabHeapBase,
                 KernelConstants.UserSlabHeapItemSize,
                 KernelConstants.UserSlabHeapSize);
-
-            memory.Commit(KernelConstants.UserSlabHeapBase - DramMemoryMap.DramBase, KernelConstants.UserSlabHeapSize);
 
             CriticalSection = new KCriticalSection(this);
             Schedulers = new KScheduler[KScheduler.CpuCoresCount];
